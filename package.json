@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "license": "Apache-2.0",
   "author": "Jacob Pfeifer",
-  "publisher": "Jacob Pfeifer",
+  "publisher": "JacobPfeifer",
   "repository": {
     "type": "git",
     "url": "https://github.com/pfeiferj/vscode-hurl"
