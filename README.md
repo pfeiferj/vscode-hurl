@@ -14,19 +14,23 @@ Utilizes a tree-sitter parser to enable token based syntax highlighting for
 Hurl runner:
 Adds a command to call Hurl for the current file and display the output in vscode.
 
+---
+
 ## Requirements
 
 Syntax highlighting does not require external dependencies.
 
 Hurl command requires [Hurl](https://hurl.dev) to be installed on your path.
 
+---
+
 ## Release Notes
 
-## 1.1.0
+### 1.1.0
 
 Colorize output of hurl in vscode panel.
 
-## 1.0.1
+#### 1.0.1
 
 Update to tree-sitter-hurl to correct parsing issue with the http version token
 
