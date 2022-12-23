@@ -1,12 +1,13 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { escape } from 'lodash';
 
-import * as Parser from 'web-tree-sitter'
+import Parser from 'web-tree-sitter'
 import { highlights } from './query'
 import * as path from 'path';
 import { exec } from "child_process";
+import Convert from 'ansi-to-html';
+var convert = new Convert({escapeXML: true});
 
 const symbolTypeMap: Record<string,string> = {
   "property": "property",
@@ -79,14 +80,13 @@ vscode.languages.registerDocumentSemanticTokensProvider(selector, provider, lege
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-
-
 	let disposable = vscode.commands.registerCommand('hurl.hurl', () => {
     const path = vscode.window.activeTextEditor?.document.fileName
     if(!path) {
       return
     }
-    exec("hurl " + path, (error, stdout, stderr) => {
+    let data = ""
+    exec("hurl " + path + " --color", (error, stdout, stderr) => {
       const panel = vscode.window.createWebviewPanel("hurl", "Hurl", vscode.ViewColumn.Beside,{})
       if (error) {
         console.log(`error: ${error.message}`);
@@ -94,13 +94,13 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
       if (stderr) {
-        console.log(`stderr: ${stderr}`);
-        panel.webview.html = "<html><body><pre>" + escape(stderr) + "</pre></body></html>"
-        return;
+        data += convert.toHtml(stderr)
+        panel.webview.html = "<html><body><pre>" + data + "</pre></body></html>"
       }
-      console.log(`stdout: ${stdout}`);
-      panel.webview.html = "<html><body><pre>" + escape(stdout) + "</pre></body></html>"
-      //vscode.window.showInformationMessage(stdout)
+      if(stdout) {
+        data += convert.toHtml(stdout)
+        panel.webview.html = "<html><body><pre>" + data + "</pre></body></html>"
+      }
     });
 	});
 
