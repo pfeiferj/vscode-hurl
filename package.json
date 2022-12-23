@@ -1,0 +1,69 @@
+{
+  "name": "hurl",
+  "displayName": "hurl",
+  "description": "Provides syntax highlighting for hurl",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "author": "Jacob Pfeifer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pfeiferj/vscode-hurl"
+  },
+  "icon": "hurl-icon.png",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "programming languages",
+    "semantic highlighting",
+    "rest"
+  ],
+  "activationEvents": [
+    "onCommand:hurl.hurl",
+    "onLanguage:hurl"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "hurl.hurl",
+        "title": "Hurl"
+      }
+    ],
+    "languages": [
+      {
+        "id": "hurl",
+        "extensions": [
+          ".hurl"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.0.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@vscode/test-electron": "^2.2.0",
+    "eslint": "^8.28.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.1.0",
+    "typescript": "^4.9.3",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "@types/lodash-es": "^4.17.6",
+    "lodash": "^4.17.21",
+    "web-tree-sitter": "^0.20.7"
+  }
+}
