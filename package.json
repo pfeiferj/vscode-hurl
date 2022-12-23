@@ -2,7 +2,7 @@
   "name": "pfeifer-hurl",
   "displayName": "Hurl",
   "description": "Provides syntax highlighting for hurl",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "Apache-2.0",
   "author": "Jacob Pfeifer",
   "publisher": "JacobPfeifer",
