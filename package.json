@@ -15,9 +15,7 @@
     "vscode": "^1.74.0"
   },
   "categories": [
-    "programming languages",
-    "semantic highlighting",
-    "rest"
+    "programming languages"
   ],
   "activationEvents": [
     "onCommand:hurl.hurl",
