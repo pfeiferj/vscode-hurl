@@ -2,6 +2,10 @@
 
 All notable changes to the "hurl" extension will be documented in this file.
 
+## [1.1.1]
+
+Add support for all front page examples on hurl.dev.
+
 ## [1.1.0]
 
 Colorize output of hurl in vscode panel.

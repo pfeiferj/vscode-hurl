@@ -8,6 +8,7 @@ export const highlights = `
 "[Captures]" @property
 "[Asserts]" @property
 "[Options]" @property
+"[BasicAuth]" @property
 
 (comment) @comment @spell
 
@@ -106,4 +107,8 @@ export const highlights = `
 "}" @punctuation.bracket
 "{{" @punctuation.special
 "}}" @punctuation.special
+
+"base64," @string.special
+"file," @string.special
+"hex," @string.special
 `;
