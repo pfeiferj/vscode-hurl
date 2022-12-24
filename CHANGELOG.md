@@ -2,6 +2,10 @@
 
 All notable changes to the "hurl" extension will be documented in this file.
 
+## [1.1.2]
+
+New line handling fixes.
+
 ## [1.1.1]
 
 Add support for all front page examples on hurl.dev.
