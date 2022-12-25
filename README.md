@@ -16,6 +16,11 @@ Adds a command to call Hurl for the current file and display the output in vscod
 
 ---
 
+## Example
+
+![Screenshot from 2022-12-25 00-17-25](https://user-images.githubusercontent.com/9106735/209457733-e04f5d99-fec2-4db7-b067-22bccad9e750.png)
+
+
 ## Requirements
 
 Syntax highlighting does not require external dependencies.
