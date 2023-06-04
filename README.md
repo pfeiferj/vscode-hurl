@@ -31,6 +31,10 @@ Hurl command requires [Hurl](https://hurl.dev) to be installed on your path.
 
 ## Release Notes
 
+## 1.2.0
+
+Handle hurl v3 http version syntax ("HTTP" instead of "HTTP/*")
+
 ### 1.1.2
 
 New line handling fixes.

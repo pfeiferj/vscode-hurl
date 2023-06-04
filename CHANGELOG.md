@@ -2,6 +2,10 @@
 
 All notable changes to the "hurl" extension will be documented in this file.
 
+## [1.2.0]
+
+Handle hurl v3 http version syntax ("HTTP" instead of "HTTP/*")
+
 ## [1.1.2]
 
 New line handling fixes.
