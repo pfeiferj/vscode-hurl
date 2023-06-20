@@ -54,9 +54,11 @@ export const highlights = `
 
 "null" @constant.builtin
 "cacert" @constant.builtin
+"compressed" @constant.builtin
 "location" @constant.builtin
 "insecure" @constant.builtin
 "max-redirs" @constant.builtin
+"proxy" @constant.builtin
 "retry" @constant.builtin
 "retry-interval" @constant.builtin
 "retry-max-count" @constant.builtin
