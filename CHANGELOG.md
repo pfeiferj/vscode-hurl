@@ -2,6 +2,13 @@
 
 All notable changes to the "hurl" extension will be documented in this file.
 
+## [1.2.1]
+
+Handle additional options: (Thanks @elbart!)
+  * compressed
+  * path\_as\_is
+  * proxy
+
 ## [1.2.0]
 
 Handle hurl v3 http version syntax ("HTTP" instead of "HTTP/*")
