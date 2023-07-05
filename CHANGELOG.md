@@ -2,6 +2,10 @@
 
 All notable changes to the "hurl" extension will be documented in this file.
 
+## [1.2.2]
+
+Fix failure from api changes. (Thanks @cailloumajor for alerting me!)
+
 ## [1.2.1]
 
 Handle additional options: (Thanks @elbart!)

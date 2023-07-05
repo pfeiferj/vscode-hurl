@@ -2,7 +2,7 @@
   "name": "pfeifer-hurl",
   "displayName": "Hurl",
   "description": "Provides syntax highlighting for hurl",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "license": "Apache-2.0",
   "author": "Jacob Pfeifer",
   "publisher": "JacobPfeifer",
@@ -64,6 +64,6 @@
     "@types/lodash-es": "^4.17.6",
     "ansi-to-html": "^0.7.2",
     "lodash": "^4.17.21",
-    "web-tree-sitter": "^0.20.7"
+    "web-tree-sitter": "^0.20.8"
   }
 }
