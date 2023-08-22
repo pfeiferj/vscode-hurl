@@ -10,7 +10,7 @@ export const highlights = `
 "[Options]" @property
 "[BasicAuth]" @property
 
-(comment) @comment @spell
+(comment) @comment
 
 (key_string) @property
 (json_key_string) @property

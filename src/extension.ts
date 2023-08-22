@@ -63,8 +63,17 @@ const provider: vscode.DocumentSemanticTokensProvider = {
     captures.forEach(capture => {
       if(!symbolTypeMap[capture.name]) return
       for(let i = capture.node.startPosition.row; i <= capture.node.endPosition.row; i++) {
+
+        let startColumn = capture.node.startPosition.column
+        if(i !== capture.node.startPosition.row) {
+          startColumn = 0
+        }
+        let endColumn = capture.node.endIndex - capture.node.startIndex + capture.node.startPosition.column
+        if(i === capture.node.endPosition.row) {
+          endColumn = capture.node.endPosition.column
+        }
         tokensBuilder.push(
-          new vscode.Range(new vscode.Position(i, capture.node.startPosition.column), new vscode.Position(i, capture.node.endPosition.column)),
+          new vscode.Range(new vscode.Position(i, startColumn), new vscode.Position(i, endColumn)),
           symbolTypeMap[capture.name] || capture.name
         );
       }

@@ -2,6 +2,11 @@
 
 All notable changes to the "hurl" extension will be documented in this file.
 
+## [1.3.0]
+
+* Handle hurl v4 custom http methods and missing and new filters
+* Fixes comment highlighting
+
 ## [1.2.2]
 
 Fix failure from api changes. (Thanks @cailloumajor for alerting me!)
