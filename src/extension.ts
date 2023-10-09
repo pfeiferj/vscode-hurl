@@ -101,8 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
       const panel = vscode.window.createWebviewPanel("hurl", "Hurl", vscode.ViewColumn.Beside,{})
       if (error) {
         console.log(`error: ${error.message}`);
-        vscode.window.showErrorMessage(error.message)
-        return;
+        vscode.window.showErrorMessage(convert.toHtml(error.message))
       }
       if (stderr) {
         data += convert.toHtml(stderr)
