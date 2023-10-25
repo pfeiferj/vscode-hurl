@@ -34,7 +34,8 @@
         "id": "hurl",
         "extensions": [
           ".hurl"
-        ]
+        ],
+        "configuration": "./language-configuration.json"
       }
     ]
   },
