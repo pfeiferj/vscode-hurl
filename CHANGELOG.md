@@ -2,6 +2,9 @@
 
 All notable changes to the "hurl" extension will be documented in this file.
 
+## [1.3.2]
+* Latest tree-sitter-hurl with fixes for multiline strings and comments at beginning of file
+
 ## [1.3.1]
 
 * Add support for comments and brackets (Thanks @smithamax!)

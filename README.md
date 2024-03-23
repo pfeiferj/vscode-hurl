@@ -31,6 +31,9 @@ Hurl command requires [Hurl](https://hurl.dev) to be installed on your path.
 
 ## Release Notes
 
+## 1.3.2
+* Latest tree-sitter-hurl with fixes for multiline strings and comments at beginning of file
+
 ## 1.3.1
 
 * Add support for comments and brackets (Thanks @smithamax!)
