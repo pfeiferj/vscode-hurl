@@ -31,6 +31,11 @@ Hurl command requires [Hurl](https://hurl.dev) to be installed on your path.
 
 ## Release Notes
 
+## 1.3.1
+
+* Add support for comments and brackets (Thanks @smithamax!)
+* Show stderr in case of error exit code (Thanks @carlo-colombo!)
+
 ## 1.3.0
 
 * Handle hurl v4 custom http methods and missing and new filters
