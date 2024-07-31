@@ -2,6 +2,9 @@
 
 All notable changes to the "hurl" extension will be documented in this file.
 
+## [1.3.3]
+* Latest tree-sitter-hurl with fixes comments with no characters (Thanks @pravic!)
+
 ## [1.3.2]
 * Latest tree-sitter-hurl with fixes for multiline strings and comments at beginning of file
 
