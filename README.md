@@ -31,6 +31,9 @@ Hurl command requires [Hurl](https://hurl.dev) to be installed on your path.
 
 ## Release Notes
 
+## 1.3.4
+* Latest tree-sitter-hurl with fixes for comments without a new line character
+
 ## 1.3.3
 * Latest tree-sitter-hurl with fixes comments with no characters (Thanks @pravic!)
 
