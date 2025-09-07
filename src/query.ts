@@ -90,11 +90,16 @@ export const highlights = `
 "matches" @keyword.operator
 "exists" @keyword.operator
 "includes" @keyword.operator
-"isInteger" @keyword.operator
-"isFloat" @keyword.operator
 "isBoolean" @keyword.operator
-"isString" @keyword.operator
 "isCollection" @keyword.operator
+"isEmpty" @keyword.operator
+"isFloat" @keyword.operator
+"isInteger" @keyword.operator
+"isIsoDate" @keyword.operator
+"isNumber" @keyword.operator
+"isString" @keyword.operator
+"isIpv4" @keyword.operator
+"isIpv6" @keyword.operator
 
 (integer) @number
 (float) @float
