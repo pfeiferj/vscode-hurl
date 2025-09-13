@@ -2,6 +2,9 @@
 
 All notable changes to the "hurl" extension will be documented in this file.
 
+## [1.4.1]
+* Latest tree-sitter-hurl with missing predicates
+
 ## [1.4.0]
 * Latest tree-sitter-hurl with missing predicates, shorter section syntax, and HTTP/3 asserts (Huge thanks to @kpbaks!)
 * Adds missing predicates to vscode queries (Thanks @Fenex!)
