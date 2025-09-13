@@ -31,6 +31,9 @@ Hurl command requires [Hurl](https://hurl.dev) to be installed on your path.
 
 ## Release Notes
 
+## 1.4.2
+* Latest tree-sitter-hurl with missing options
+
 ## 1.4.1
 * Latest tree-sitter-hurl with missing predicates
 
