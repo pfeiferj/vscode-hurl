@@ -2,6 +2,19 @@
 
 All notable changes to the "hurl" extension will be documented in this file.
 
+## [Unreleased]
+
+- Remove the Hurl command runner, output webview, and execution-only dependencies;
+  retain syntax highlighting and the existing language configuration.
+- Update direct dependencies and tooling to current stable releases; require VS
+  Code 1.142.0 or newer.
+- Await Tree-sitter initialization before registering the semantic token provider,
+  support all Hurl document schemes, and dispose WASM resources correctly.
+- Emit unique standard semantic token types and non-overlapping UTF-16 ranges,
+  including CRLF, nested escapes, variables, and multiline strings.
+- Add real WASM/query regressions, extension-host tests, a reproducible lockfile,
+  and verification of the runtime and grammar assets in the packaged VSIX.
+
 ## [1.4.2]
 * Latest tree-sitter-hurl with missing options
 

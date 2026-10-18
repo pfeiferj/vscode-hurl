@@ -12,6 +12,7 @@ export const highlights = `
   (value_string)
   (quoted_string)
   (json_string)
+  (multiline_string)
 ] @string
 
 

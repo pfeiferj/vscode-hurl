@@ -1,96 +1,57 @@
 # Hurl
 
-Plugin for [Hurl](https://hurl.dev) files.
-
-NOTE: This is an unofficial plugin, visit <https://hurl.dev> for more information
-about the Hurl project.
+Tree-sitter-based syntax highlighting for [Hurl](https://hurl.dev) files in VS Code.
+This is an unofficial extension; see the Hurl website for the project itself.
 
 ## Features
 
-Semantic Token Highlighting:
-Utilizes a tree-sitter parser to enable token based syntax highlighting for
-.hurl files.
+- Semantic syntax highlighting for `.hurl` files, including requests, assertions,
+  strings, escapes, variables, comments, and multiline bodies.
+- Hurl language configuration for comments, brackets, and automatic closing pairs.
+- Highlighting for local files, untitled documents, and other document URI schemes.
 
-Hurl runner:
-Adds a command to call Hurl for the current file and display the output in vscode.
-
----
-
-## Example
-
-![Screenshot from 2022-12-25 00-17-25](https://user-images.githubusercontent.com/9106735/209457733-e04f5d99-fec2-4db7-b067-22bccad9e750.png)
-
+The extension only provides highlighting and language configuration. It does not
+register a Hurl command, execute requests, start processes, or open output webviews.
+No Hurl executable or other external runtime is required: both the Tree-sitter
+runtime and the existing Hurl grammar are included as WebAssembly assets.
 
 ## Requirements
 
-Syntax highlighting does not require external dependencies.
+VS Code **1.142.0 or newer**. Your theme must enable semantic highlighting; if
+needed, set `editor.semanticHighlighting.enabled` to `true` in VS Code settings.
 
-Hurl command requires [Hurl](https://hurl.dev) to be installed on your path.
+## Development
 
----
+Use Node.js **24 LTS** and npm. Install the exact dependency graph with `npm ci`.
 
-## Release Notes
+```sh
+npm test                  # Compile, lint, and run real WASM/query regressions
+npm run test:integration  # Download current stable VS Code; run extension-host tests
+npm run verify:package    # Build hurl.vsix; verify and smoke-test the extracted assets
+```
 
-## 1.4.2
-* Latest tree-sitter-hurl with missing options
+The package verifier requires `unzip` (available on macOS and most Linux systems).
+It prints the extracted extension path for an additional extension-host check of
+the actual packaged artifact:
 
-## 1.4.1
-* Latest tree-sitter-hurl with missing predicates
+```sh
+HURL_EXTENSION_PATH="/absolute/path/printed/by/verifier/extension" npm run test:integration
+```
 
-## 1.4.0
-* Latest tree-sitter-hurl with missing predicates, shorter section syntax, and HTTP/3 asserts (Huge thanks to @kpbaks!)
-* Adds missing predicates to vscode queries (Thanks @Fenex!)
+Integration tests need a desktop session and network access for the initial VS
+Code download. They check actual semantic tokens for untitled and custom-scheme
+documents, edits, and the absence of the removed `hurl.hurl` command.
 
-## 1.3.4
-* Latest tree-sitter-hurl with fixes for comments without a new line character
+The runtime uses the current `web-tree-sitter` named `Parser`, `Language`, and
+`Query` APIs, explicitly locating the packaged runtime WASM. The unchanged Hurl
+parser has ABI 14, supported by runtime 0.27.1 (ABI 13–15); tests load the real
+parser and compile the real highlighting query. Trees are deleted after every
+request, and the parser, query, and provider are disposed with the extension.
 
-## 1.3.3
-* Latest tree-sitter-hurl with fixes comments with no characters (Thanks @pravic!)
+ESLint uses Babel's TypeScript syntax parser because the current
+`@typescript-eslint` release does not support the current stable TypeScript 7
+peer dependency. TypeScript performs strict type checking and unused-code checks.
 
-## 1.3.2
-* Latest tree-sitter-hurl with fixes for multiline strings and comments at beginning of file
+## Release notes
 
-## 1.3.1
-
-* Add support for comments and brackets (Thanks @smithamax!)
-* Show stderr in case of error exit code (Thanks @carlo-colombo!)
-
-## 1.3.0
-
-* Handle hurl v4 custom http methods and missing and new filters
-* Fixes comment highlighting
-
-## 1.2.2
-
-Fix failure from api changes. (Thanks @cailloumajor for alerting me!)
-
-## 1.2.1
-
-Handle additional options: (Thanks @elbart!)
-  * compressed
-  * path\_as\_is
-  * proxy
-
-## 1.2.0
-
-Handle hurl v3 http version syntax ("HTTP" instead of "HTTP/*")
-
-### 1.1.2
-
-New line handling fixes.
-
-### 1.1.1
-
-Support for all front page hurl.dev examples.
-
-### 1.1.0
-
-Colorize output of hurl in vscode panel.
-
-### 1.0.1
-
-Update to tree-sitter-hurl to correct parsing issue with the http version token
-
-### 1.0.0
-
-Initial release of Hurl language extension.
+See [CHANGELOG.md](CHANGELOG.md).
