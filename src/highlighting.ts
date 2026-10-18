@@ -16,6 +16,7 @@ const captureTypes: Readonly<Record<string, string>> = {
   attribute: 'decorator',
   'constant.builtin': 'enumMember',
   boolean: 'keyword',
+  keyword: 'keyword',
   variable: 'variable',
   'keyword.operator': 'operator',
   operator: 'operator',
@@ -64,7 +65,8 @@ export class Highlighter {
     if (this.disposed) {
       throw new Error('Highlighter has been disposed');
     }
-    const tree = this.parser.parse(text);
+    // VS Code treats standalone CR as a line ending; keep UTF-16 offsets unchanged.
+    const tree = this.parser.parse(text.replace(/\r(?!\n)/g, '\n'));
     if (!tree) {
       return [];
     }

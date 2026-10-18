@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/pfeiferj/tree-sitter-hurl",
+  "branch": "main",
+  "commit": "3343774c9dff87570dd5d5b90d5e92405678d1d5",
+  "abiVersion": 15,
+  "treeSitterCli": "0.27.1",
+  "wasiSdk": "34.0",
+  "binaryen": "132",
+  "sha256": "5c92d8449e95f024470de90ff116174dc977661d55ee584e10fb6a00960c8048"
+}

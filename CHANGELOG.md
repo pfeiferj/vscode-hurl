@@ -4,6 +4,9 @@ All notable changes to the "hurl" extension will be documented in this file.
 
 ## [Unreleased]
 
+- Update the bundled Hurl grammar to upstream main at `3343774` (ABI 15), with
+  pinned build provenance and modern Hurl/JSON/XML highlighting regressions.
+
 - Remove the Hurl command runner, output webview, and execution-only dependencies;
   retain syntax highlighting and the existing language configuration.
 - Update direct dependencies and tooling to current stable releases; require VS
