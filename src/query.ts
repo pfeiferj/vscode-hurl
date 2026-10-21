@@ -23,7 +23,12 @@ export const highlights = `
 ] @string
 
 
-(file_value) @string.special
+[
+  (file_value)
+  (oneline_hex)
+  (oneline_base64)
+  (oneline_file)
+] @string.special
 (regex) @string.regex
 
 [
@@ -50,8 +55,8 @@ export const highlights = `
 (duration_unit) @string.special
 (certificate_attribute) @string.special
 
-(_ option_key: _ @constant.builtin)
-(verbosity_option level: _ @constant.builtin)
+(_ option_key: _ @option)
+(verbosity_option level: _ @option)
 "null" @constant.builtin
 
 (boolean) @boolean
@@ -59,18 +64,17 @@ export const highlights = `
 "redact" @keyword
 
 (variable_name) @variable
+(capture (key_string) @variable.declaration)
 
 (_ predicate_name: _ @keyword.operator)
 "not" @keyword.operator
 
-[
-  "=="
-  "!="
-  ">"
-  ">="
-  "<"
-  "<="
-] @operator
+(equal_predicate "==" @operator)
+(not_equal_predicate "!=" @operator)
+(greater_predicate ">" @operator)
+(greater_or_equal_predicate ">=" @operator)
+(less_predicate "<" @operator)
+(less_or_equal_predicate "<=" @operator)
 
 (integer) @number
 (float) @float
@@ -82,6 +86,19 @@ export const highlights = `
 (xml_close_tag (xml_name) @type)
 (xml_self_closing_tag (xml_name) @type)
 (xml_attribute (xml_name) @property)
+(xml_prolog_tag) @keyword
+(xml_dtd_declaration) @keyword
+(xml_parameter_entity_reference) @string.escape
+(xml_dtd_string) @string
+(xml_doctype (xml_name) @type)
+["<!DOCTYPE" "SYSTEM" "PUBLIC"] @keyword
+
+; XML delimiters must not inherit assertion comparison-operator scopes.
+(xml_open_tag ["<" ">"] @punctuation.bracket)
+(xml_close_tag ["</" ">"] @punctuation.bracket)
+(xml_self_closing_tag ["<" "/>"] @punctuation.bracket)
+(xml_doctype ">" @punctuation.bracket)
+(xml_attribute "=" @punctuation.delimiter)
 
 ":" @punctuation.delimiter
 "," @punctuation.delimiter

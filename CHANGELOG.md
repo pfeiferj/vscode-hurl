@@ -4,6 +4,17 @@ All notable changes to the "hurl" extension will be documented in this file.
 
 ## [Unreleased]
 
+- Preserve punctuation and interpolation captures; add Hurl-specific semantic
+  types and TextMate fallback scopes for methods, escapes, booleans, and options.
+- Complete native XML declaration/DTD and encoded-body highlighting; classify
+  capture names as variable declarations.
+- Highlight JSON, XML, and GraphQL fences while preserving Hurl templates and
+  leaving raw/unknown fences literal.
+- Move parsing/query work into a worker thread, cache unchanged documents, and
+  discard cancelled or superseded requests.
+- Enable semantic highlighting by default for Hurl, preserving explicit user
+  overrides, and test actual visible-editor requests under a disabled theme.
+
 - Update the bundled Hurl grammar to upstream main at `3343774` (ABI 15), with
   pinned build provenance and modern Hurl/JSON/XML highlighting regressions.
 
@@ -13,7 +24,7 @@ All notable changes to the "hurl" extension will be documented in this file.
   Code 1.142.0 or newer.
 - Await Tree-sitter initialization before registering the semantic token provider,
   support all Hurl document schemes, and dispose WASM resources correctly.
-- Emit unique standard semantic token types and non-overlapping UTF-16 ranges,
+- Emit a unique semantic token legend and non-overlapping UTF-16 ranges,
   including CRLF, nested escapes, variables, and multiline strings.
 - Add real WASM/query regressions, extension-host tests, a reproducible lockfile,
   and verification of the runtime and grammar assets in the packaged VSIX.

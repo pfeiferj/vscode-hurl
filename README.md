@@ -7,6 +7,15 @@ This is an unofficial extension; see the Hurl website for the project itself.
 
 - Semantic syntax highlighting for `.hurl` files, including requests, assertions,
   strings, escapes, variables, comments, and multiline bodies.
+- Distinct interpolation/punctuation, HTTP method, boolean, escape, and option
+  token types with Hurl-specific TextMate fallback scopes for theme compatibility.
+- Native XML declarations, DTDs, tags and attributes, complete encoded literals,
+  and variable declarations in capture sections.
+- Embedded JSON, XML, and GraphQL highlighting in explicitly language-tagged
+  fences, preserving Hurl interpolation. `raw`, untagged, and unknown-language
+  fences remain literal strings.
+- Background worker parsing with bounded document caching and cancellation of
+  superseded requests, keeping parsing off the shared extension-host thread.
 - Hurl language configuration for comments, brackets, and automatic closing pairs.
 - Highlighting for local files, untitled documents, and other document URI schemes.
 
@@ -17,8 +26,11 @@ runtime and the Hurl grammar are included as WebAssembly assets.
 
 ## Requirements
 
-VS Code **1.142.0 or newer**. Your theme must enable semantic highlighting; if
-needed, set `editor.semanticHighlighting.enabled` to `true` in VS Code settings.
+VS Code **1.142.0 or newer**. Semantic highlighting is enabled by default for Hurl,
+including with themes that do not opt into it. Explicit user settings still win:
+`[hurl].editor.semanticHighlighting.enabled: false` disables it, and
+`"configuredByTheme"` restores theme-controlled behavior. There is no TextMate
+grammar fallback when semantic highlighting is explicitly disabled.
 
 ## Development
 
@@ -39,15 +51,27 @@ HURL_EXTENSION_PATH="/absolute/path/printed/by/verifier/extension" npm run test:
 ```
 
 Integration tests need a desktop session and network access for the initial VS
-Code download. They check actual modern Hurl semantic tokens for untitled and custom-scheme
-documents, edits, and the absence of the removed `hurl.hurl` command. Custom URI
-coverage is not a test of a genuine remote extension host.
+Code download. They check provider tokens for untitled and custom-scheme documents,
+edits, and the absence of the removed `hurl.hurl` command. A separate visible-editor
+test observes automatic requests under a semantic-disabled test theme, checking
+both the Hurl default and explicit user overrides. Tests use isolated user data
+and do not change your normal VS Code settings. Set `HURL_VSCODE_VERSION=1.142.0`
+to test the minimum supported release instead of current stable. Custom URI
+coverage is not a test of a genuine remote extension host; automatic requests are
+not a screenshot-based assertion of theme colors.
 
 The runtime uses the current `web-tree-sitter` named `Parser`, `Language`, and
 `Query` APIs, explicitly locating the packaged runtime WASM. The bundled Hurl
 parser has ABI 15, supported by runtime 0.27.1 (ABI 13–15); tests verify its digest,
 load the real parser, and compile the real highlighting query. Trees are deleted after every
-request, and the parser, query, and provider are disposed with the extension.
+request. The worker is terminated with the extension; closing or editing a document
+invalidates its cache and pending requests. Results are cached for at most eight
+documents with a bounded estimated source/token footprint. Cancellation promptly
+discards stale results, skips queued obsolete jobs, and cooperatively interrupts
+active native/embedded parsing and queries. Unexpected worker failures reject
+outstanding requests; later requests can restart it with bounded backoff (at most
+two restarts per 30 seconds). Parsing still processes the whole changed
+document, but never runs on the shared extension-host thread.
 Standalone CR is normalized to LF for parsing without changing UTF-16 offsets;
 token ranges still use the original document and exclude all line terminators.
 
@@ -98,9 +122,12 @@ git ls-remote --symref https://github.com/pfeiferj/tree-sitter-hurl.git HEAD
 
 Use that exact commit in the isolated checkout, inspect upstream's locked CLI
 version, and update the asset and provenance together. Adapt `src/query.ts` to
-upstream node/field changes while using standard VS Code semantic token types.
+upstream node/field changes. Keep `src/tokens.ts` and the manifest's custom semantic
+types and scope mappings in sync; tests enforce capture and theme coverage.
 The current query covers Hurl functions, filters, option units and verbosity,
-filename/JSON interpolation, raw fences, and native XML without extra runtimes.
+filename/JSON interpolation, raw fences, and native XML. Fenced JSON/XML/GraphQL
+parsers are pinned `@lumis-sh/wasm-*` dependencies, shipped as WASM assets with
+their licenses; they use the same Tree-sitter runtime and require no external tools.
 Add real parsing/token regressions, then run `npm test`, `npm run verify:package`,
 and the printed extracted-package extension-host command before releasing.
 

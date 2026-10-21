@@ -22,6 +22,11 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "configurationDefaults": {
+      "[hurl]": {
+        "editor.semanticHighlighting.enabled": true
+      }
+    },
     "languages": [
       {
         "id": "hurl",
@@ -29,6 +34,71 @@
           ".hurl"
         ],
         "configuration": "./language-configuration.json"
+      }
+    ],
+    "semanticTokenTypes": [
+      {
+        "id": "hurlMethod",
+        "superType": "method",
+        "description": "Hurl HTTP request method"
+      },
+      {
+        "id": "hurlEscape",
+        "superType": "string",
+        "description": "Hurl string escape or XML entity reference"
+      },
+      {
+        "id": "hurlBoolean",
+        "superType": "keyword",
+        "description": "Hurl or JSON boolean literal"
+      },
+      {
+        "id": "hurlOption",
+        "superType": "property",
+        "description": "Hurl option name or verbosity level"
+      },
+      {
+        "id": "punctuationBracket",
+        "description": "Hurl, JSON or XML structural bracket"
+      },
+      {
+        "id": "punctuationDelimiter",
+        "description": "Hurl, JSON or XML punctuation separator"
+      },
+      {
+        "id": "punctuationSpecial",
+        "description": "Hurl variable interpolation delimiter"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "hurl",
+        "scopes": {
+          "hurlMethod": [
+            "keyword.control.http-method.hurl"
+          ],
+          "hurlEscape": [
+            "constant.character.escape.hurl"
+          ],
+          "hurlBoolean": [
+            "constant.language.boolean.hurl"
+          ],
+          "hurlOption": [
+            "support.constant.option.hurl"
+          ],
+          "punctuationBracket": [
+            "punctuation.section.brackets.hurl"
+          ],
+          "punctuationDelimiter": [
+            "punctuation.separator.hurl"
+          ],
+          "punctuationSpecial": [
+            "punctuation.section.interpolation.hurl"
+          ],
+          "variable.declaration": [
+            "variable.other.readwrite.hurl"
+          ]
+        }
       }
     ]
   },
@@ -38,7 +108,7 @@
     "watch": "tsc --watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "node --test out/test/highlighting.test.js",
+    "test": "node --test out/test/*.test.js",
     "test:integration": "node out/test/runTest.js",
     "package": "vsce package --out hurl.vsix",
     "verify:package": "npm run package && node scripts/verify-package.cjs"
@@ -55,6 +125,9 @@
     "@types/emscripten": "^1.41.6"
   },
   "dependencies": {
+    "@lumis-sh/wasm-graphql": "0.26.3",
+    "@lumis-sh/wasm-json": "0.26.5",
+    "@lumis-sh/wasm-xml": "0.26.4",
     "web-tree-sitter": "^0.27.1"
   }
 }
