@@ -51,10 +51,12 @@ export async function run(): Promise<void> {
   assert.ok(extension.isActive);
   await checkDocument(document, expected);
   const fences = await vscode.workspace.openTextDocument({ language: 'hurl', content:
-    'POST https://example.org\n```json\n{"enabled":true,"value":{{value}}}\n```\nHTTP 200\n[Captures]\nsaved: body\n' +
+    'POST https://example.org\n```json\n' +
+    '{"enabled":true,"{{\nkey\n}}":"😀{{value replace "old" "new"}}tail\\n","n":{{amount}},"nil":null}\n```\nHTTP 200\n[Captures]\nsaved: body\n' +
     'POST https://example.org/{{saved}}\n```xml\n<root attr="x"/>\n```\n' +
     'POST https://example.org\n```graphql\nquery Demo { user { name } }\n```\n' });
   await checkDocument(fences, [['"enabled"', 'property'], ['true', 'hurlBoolean'], ['value', 'variable'],
+    ['key', 'variable'], ['amount', 'variable'], ['replace', 'function'], ['\\n', 'hurlEscape'], ['null', 'enumMember'],
     ['saved', 'variable', 'declaration'], ['root', 'type'], ['attr', 'property'], ['query', 'keyword'],
     ['{{', 'punctuationSpecial'], ['}}', 'punctuationSpecial']]);
   const contentProvider = vscode.workspace.registerTextDocumentContentProvider('hurl-test', {

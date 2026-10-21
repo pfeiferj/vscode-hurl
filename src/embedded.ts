@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { Language, Node, Parser, Query } from 'web-tree-sitter';
 
+import { highlights } from './query';
+
 export interface EmbeddedSpan {
   start: number;
   end: number;
@@ -16,19 +18,20 @@ interface Grammar {
 export class EmbeddedHighlighter {
   private constructor(private readonly grammars: Map<string, Grammar>) {}
 
-  static async create(): Promise<EmbeddedHighlighter> {
+  static async create(hurlLanguage: Language): Promise<EmbeddedHighlighter> {
     await Parser.init({ locateFile: () => require.resolve('web-tree-sitter/web-tree-sitter.wasm') });
     const grammars = new Map<string, Grammar>();
     const highlighter = new EmbeddedHighlighter(grammars);
     try {
       for (const name of ['json', 'xml', 'graphql']) {
-        const language = await Language.load(require.resolve(`@lumis-sh/wasm-${name}/tree-sitter-${name}.wasm`));
+        const language = name === 'json' ? hurlLanguage :
+          await Language.load(require.resolve(`@lumis-sh/wasm-${name}/tree-sitter-${name}.wasm`));
         const parser = new Parser();
         try {
           parser.setLanguage(language);
-          const metadata = JSON.parse(readFileSync(require.resolve(`@lumis-sh/wasm-${name}/lumis.json`), 'utf8'));
-          const query = new Query(language, (name === 'json' ? '(string) @string\n' : '') +
-            metadata.languages[name].highlights);
+          const source = name === 'json' ? highlights :
+            JSON.parse(readFileSync(require.resolve(`@lumis-sh/wasm-${name}/lumis.json`), 'utf8')).languages[name].highlights;
+          const query = new Query(language, source);
           grammars.set(name, { parser, query });
         } catch (error) {
           parser.delete();
@@ -53,6 +56,7 @@ export class EmbeddedHighlighter {
     const start = newline.endIndex;
     const end = fenceNode.children.find(node => node.type === '```' && node.startIndex >= start)?.startIndex
       ?? fenceNode.endIndex;
+    if (hint === 'json') { return this.jsonSpans(text, start, end, grammar, shouldCancel); }
     const templates = fenceNode.descendantsOfType('template')
       .map(node => ({ start: node.startIndex, end: node.endIndex }));
     let source = '';
@@ -62,7 +66,7 @@ export class EmbeddedHighlighter {
       source += text.slice(cursor, template.start);
       // No /u flag: replace each UTF-16 code unit, including both halves of emoji.
       const masked = text.slice(template.start, template.end).replace(/[^\r\n]/g, ' ');
-      source += (hint === 'json' ? '0' : 'x') + masked.slice(1);
+      source += 'x' + masked.slice(1);
       cursor = template.end;
     }
     source += text.slice(cursor, end);
@@ -106,6 +110,32 @@ export class EmbeddedHighlighter {
           cursor = Math.max(cursor, template.end);
         }
         if (cursor < end) { result.push({ start: cursor, end, capture: name }); }
+      }
+      return shouldCancel() ? [] : result;
+    } finally { tree.delete(); }
+  }
+
+  /** Parse the untouched body as a native Hurl JSON value, including Hurl templates. */
+  private jsonSpans(text: string, start: number, end: number, grammar: Grammar,
+    shouldCancel: () => boolean): EmbeddedSpan[] {
+    // The Hurl parser starts at hurl_file, not json_value. A synthetic request
+    // supplies the normal body context without rewriting the JSON or templates.
+    // Only captures entirely inside the original body escape.
+    const prefix = 'POST https://hurl.invalid\n';
+    const source = prefix + text.slice(start, end) + '\n';
+    const tree = grammar.parser.parse(source, null, { progressCallback: shouldCancel });
+    if (!tree) {
+      grammar.parser.reset();
+      return [];
+    }
+    try {
+      const result: EmbeddedSpan[] = [];
+      for (const { name, node } of grammar.query.captures(tree.rootNode, { progressCallback: shouldCancel })) {
+        if (shouldCancel()) { return []; }
+        if (node.startIndex >= prefix.length && node.endIndex <= prefix.length + end - start) {
+          result.push({ start: start + node.startIndex - prefix.length,
+            end: start + node.endIndex - prefix.length, capture: name });
+        }
       }
       return shouldCancel() ? [] : result;
     } finally { tree.delete(); }

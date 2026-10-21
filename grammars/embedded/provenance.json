@@ -1,21 +1,4 @@
 {
-  "json": {
-    "package": "@lumis-sh/wasm-json",
-    "version": "0.26.5",
-    "abiVersion": 15,
-    "parser": {
-      "name": "tree-sitter-json",
-      "grammarName": "json",
-      "upstreamVersion": "0.24.8",
-      "revision": "ee35a6ebefcef0c5c416c0d1ccec7370cfca5a24",
-      "sha256": "c589ab7005dfb4d449a65136ff1f1c9b1e206360fe331b4b22f15cc4a023d791",
-      "size": 6825
-    },
-    "upstreamRepository": "https://github.com/tree-sitter/tree-sitter-json",
-    "upstreamLicenseUrl": "https://raw.githubusercontent.com/tree-sitter/tree-sitter-json/ee35a6ebefcef0c5c416c0d1ccec7370cfca5a24/LICENSE",
-    "license": "MIT",
-    "queries": "Packaged lumis.json languages.<language>.highlights"
-  },
   "xml": {
     "package": "@lumis-sh/wasm-xml",
     "version": "0.26.4",

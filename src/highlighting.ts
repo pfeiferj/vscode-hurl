@@ -47,7 +47,7 @@ export class Highlighter {
     try {
       parser.setLanguage(language);
       query = new Query(language, highlights);
-      return new Highlighter(parser, query, await EmbeddedHighlighter.create());
+      return new Highlighter(parser, query, await EmbeddedHighlighter.create(language));
     } catch (error) {
       query?.delete();
       parser.delete();

@@ -12,8 +12,9 @@ This is an unofficial extension; see the Hurl website for the project itself.
 - Native XML declarations, DTDs, tags and attributes, complete encoded literals,
   and variable declarations in capture sections.
 - Embedded JSON, XML, and GraphQL highlighting in explicitly language-tagged
-  fences, preserving Hurl interpolation. `raw`, untagged, and unknown-language
-  fences remain literal strings.
+  fences. JSON reuses the Hurl grammar with templates intact; XML and GraphQL
+  preserve Hurl interpolation around their embedded captures. `raw`, untagged,
+  and unknown-language fences remain literal strings.
 - Background worker parsing with bounded document caching and cancellation of
   superseded requests, keeping parsing off the shared extension-host thread.
 - Hurl language configuration for comments, brackets, and automatic closing pairs.
@@ -125,9 +126,10 @@ version, and update the asset and provenance together. Adapt `src/query.ts` to
 upstream node/field changes. Keep `src/tokens.ts` and the manifest's custom semantic
 types and scope mappings in sync; tests enforce capture and theme coverage.
 The current query covers Hurl functions, filters, option units and verbosity,
-filename/JSON interpolation, raw fences, and native XML. Fenced JSON/XML/GraphQL
-parsers are pinned `@lumis-sh/wasm-*` dependencies, shipped as WASM assets with
-their licenses; they use the same Tree-sitter runtime and require no external tools.
+filename/JSON interpolation, raw fences, and native XML. Tagged JSON reuses this
+same grammar and query without masking templates. Only fenced XML and GraphQL
+need pinned `@lumis-sh/wasm-*` dependencies, shipped as WASM assets with their
+licenses; they use the same Tree-sitter runtime and require no external tools.
 Add real parsing/token regressions, then run `npm test`, `npm run verify:package`,
 and the printed extracted-package extension-host command before releasing.
 

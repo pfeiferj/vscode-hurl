@@ -15,11 +15,12 @@ async function main() {
     'node_modules/web-tree-sitter/web-tree-sitter.wasm']) {
     assert.ok(listing.includes(`extension/${file}`), `Missing packaged ${file}`);
   }
-  for (const language of ['json', 'xml', 'graphql']) {
+  for (const language of ['xml', 'graphql']) {
     for (const file of [`tree-sitter-${language}.wasm`, 'package.json', 'LICENSE']) {
       assert.ok(listing.includes(`extension/node_modules/@lumis-sh/wasm-${language}/${file}`), `Missing packaged ${language}/${file}`);
     }
   }
+  assert.ok(!listing.some(file => file.startsWith('extension/node_modules/@lumis-sh/wasm-json/')));
   assert.ok(!listing.some(file => /extension\/(src|scripts|out\/test)\//.test(file)));
   assert.ok(!listing.some(file => /node_modules\/(ansi-to-html|lodash|typescript|eslint)\//.test(file)));
   const directory = fs.mkdtempSync(path.resolve('.vscode-test/package-'));
@@ -56,7 +57,8 @@ async function main() {
   const { WorkerHighlighter } = require(path.join(root, 'out/worker-highlighter.js'));
   const worker = await WorkerHighlighter.create(grammar);
   try {
-    const source = 'POST https://example.org\n```json\n{"enabled":true,"value":{{value}}}\n```\n' +
+    const source = 'POST https://example.org\n```json\n' +
+      '{"enabled":true,"{{\nkey\n}}":"😀{{value replace "old" "new"}}tail\\n","n":{{amount}},"nil":null}\n```\n' +
       'POST https://example.org\n```xml\n<root attr="x"/>\n```\n' +
       'POST https://example.org\n```graphql\nquery Demo { user { name } }\n```\n';
     const lines = source.split('\n');
@@ -66,6 +68,7 @@ async function main() {
       text: lines[token.line].slice(token.start, token.start + token.length), type: tokenTypes[token.type],
     }));
     for (const [text, type] of [['"enabled"', 'property'], ['true', 'hurlBoolean'], ['value', 'variable'],
+      ['key', 'variable'], ['amount', 'variable'], ['replace', 'function'], ['\\n', 'hurlEscape'], ['null', 'enumMember'],
       ['root', 'type'], ['query', 'keyword']]) {
       assert.ok(decoded.some(token => token.text === text && token.type === type), `Packaged fence ${text}: ${type}`);
     }

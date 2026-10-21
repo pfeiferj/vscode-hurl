@@ -13,7 +13,7 @@ before(async () => {
   await Parser.init({ locateFile: () => require.resolve('web-tree-sitter/web-tree-sitter.wasm') });
   hurl = new Parser();
   hurl.setLanguage(await Language.load(path.resolve(__dirname, '../../tree-sitter-hurl.wasm')));
-  embedded = await EmbeddedHighlighter.create();
+  embedded = await EmbeddedHighlighter.create(hurl.language!);
 });
 after(() => { embedded?.dispose(); hurl?.delete(); });
 
@@ -46,7 +46,7 @@ test('embedded parsing cooperatively cancels and resets before the next fence', 
 });
 
 test('pinned packaged WASM assets match provenance and load with runtime ABI 13–15', async () => {
-  for (const [name, version] of [['json', '0.26.5'], ['xml', '0.26.4'], ['graphql', '0.26.3']]) {
+  for (const [name, version] of [['xml', '0.26.4'], ['graphql', '0.26.3']]) {
     const metadata = JSON.parse(readFileSync(require.resolve(`@lumis-sh/wasm-${name}/lumis.json`), 'utf8'));
     const wasmPath = require.resolve(`@lumis-sh/wasm-${name}/tree-sitter-${name}.wasm`);
     const pinned = JSON.parse(readFileSync(path.resolve(__dirname, '../../grammars/embedded/provenance.json'), 'utf8'))[name];
@@ -60,11 +60,33 @@ test('pinned packaged WASM assets match provenance and load with runtime ABI 13�
   }
 });
 
-test('packaged JSON grammar highlights only the fenced body with absolute offsets', () => {
+test('tagged JSON uses the native Hurl grammar with intact templates', () => {
+  const body = '{"{{key}}":"😀{{name replace "old" "new"}}tail\\n", "value":{{value}}, "nil":null}';
+  const text = `POST https://example.org\n\`\`\`json\n${body}\n\`\`\`\n`;
+  fences(text, nodes => {
+    const parse = Parser.prototype.parse;
+    const inputs: Array<{ language: string | undefined; source: string }> = [];
+    const observed = mock.method(Parser.prototype, 'parse', function(this: Parser, ...args: Parameters<Parser['parse']>) {
+      if (typeof args[0] === 'string') { inputs.push({ language: this.language?.name ?? undefined, source: args[0] }); }
+      return parse.apply(this, args);
+    });
+    try {
+      const spans = embedded.spans(text, nodes[0]);
+      assert.ok(inputs.some(input => input.language === 'hurl' && input.source.includes(body)),
+        'tagged JSON must be parsed by tree-sitter-hurl without masking templates');
+      for (const [value, capture] of [['"{{key}}"', 'property'], ['key', 'variable'], ['name', 'variable'],
+        ['replace', 'function.builtin'], ['\\n', 'string.escape'], ['null', 'constant.builtin']]) {
+        assert.ok(spans.some(span => text.slice(span.start, span.end) === value && span.capture === capture), `${value}: ${capture}`);
+      }
+    } finally { observed.mock.restore(); }
+  });
+});
+
+test('native Hurl JSON highlights only the fenced body with absolute offsets', () => {
   const text = 'POST https://example.com\n```json\n{"name":"Ada", "ok":true,"n":42,"nil":null}\n```\n';
   const result = marked(text);
   for (const [value, capture] of [['"name"', 'property'], ['"Ada"', 'string'],
-    ['true', 'boolean'], ['42', 'number'], ['null', 'keyword'], ['{', 'punctuation.bracket']]) {
+    ['true', 'boolean'], ['42', 'float'], ['null', 'constant.builtin'], ['{', 'punctuation.bracket']]) {
     assert.ok(result.some(span => span.text === value && span.capture === capture), `${value}: ${capture}`);
   }
   assert.ok(result.every(span => span.start >= text.indexOf('{') && span.end <= text.lastIndexOf('```')));
@@ -79,9 +101,8 @@ test('GraphQL grammar classifies operations, variables, fields and scalar values
   }
 });
 
-test('templates are masked without shifting UTF-16 offsets or consuming Hurl interpolation', () => {
+test('XML and GraphQL templates are masked without shifting UTF-16 offsets or consuming Hurl interpolation', () => {
   for (const [hint, body, expected] of [
-    ['json', '{"é":"😀{{ value | replace "😀" "y" }}tail\\n", "amount":{{\r\namount\r\n}}, "ok":true}', 'tail'],
     ['xml', '<root id="😀{{value}}tail">{{content}}<child ok="yes" /></root>', '"yes"'],
     ['graphql', 'query { user(id: {{id}}) { name(note: "😀{{value}}tail") active } }', 'active'],
   ]) {
@@ -98,16 +119,12 @@ test('templates are masked without shifting UTF-16 offsets or consuming Hurl int
         assert.ok(templates.every(template => span.end <= template.startIndex || span.start >= template.endIndex),
           `${hint}: ${JSON.stringify(text.slice(span.start, span.end))}`);
       }
-      if (hint === 'json') {
-        assert.ok(spans.some(span => span.capture === 'boolean' && text.slice(span.start, span.end) === 'true'));
-        assert.ok(spans.some(span => span.capture === 'string.escape' && text.slice(span.start, span.end) === '\\n'));
-      }
     });
   }
 });
 
 test('disposal releases parsers and queries once and rejects further work', async () => {
-  const local = await EmbeddedHighlighter.create();
+  const local = await EmbeddedHighlighter.create(hurl.language!);
   const parsers = mock.method(Parser.prototype, 'delete');
   const queries = mock.method(Query.prototype, 'delete');
   try {
@@ -135,7 +152,7 @@ test('failed initialization releases earlier grammars and the failing parser', a
   const parsers = mock.method(Parser.prototype, 'delete');
   const queries = mock.method(Query.prototype, 'delete');
   try {
-    await assert.rejects(EmbeddedHighlighter.create(), /initialization failed/);
+    await assert.rejects(EmbeddedHighlighter.create(hurl.language!), /initialization failed/);
     assert.equal(parsers.mock.callCount(), 2);
     assert.equal(queries.mock.callCount(), 1);
   } finally {

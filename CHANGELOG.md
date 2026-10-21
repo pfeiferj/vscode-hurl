@@ -10,6 +10,8 @@ All notable changes to the "hurl" extension will be documented in this file.
   capture names as variable declarations.
 - Highlight JSON, XML, and GraphQL fences while preserving Hurl templates and
   leaving raw/unknown fences literal.
+- Reuse the bundled Hurl JSON grammar and native query in tagged JSON blocks,
+  parsing templates intact and removing the separate JSON grammar dependency.
 - Move parsing/query work into a worker thread, cache unchanged documents, and
   discard cancelled or superseded requests.
 - Enable semantic highlighting by default for Hurl, preserving explicit user

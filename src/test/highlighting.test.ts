@@ -246,7 +246,7 @@ test('extension manifest and activation have no runner, commands or shell execut
   assert.equal(manifest.contributes.commands, undefined);
   assert.deepEqual(manifest.activationEvents, ['onLanguage:hurl']);
   assert.deepEqual(Object.keys(manifest.dependencies).sort(), [
-    '@lumis-sh/wasm-graphql', '@lumis-sh/wasm-json', '@lumis-sh/wasm-xml', 'web-tree-sitter',
+    '@lumis-sh/wasm-graphql', '@lumis-sh/wasm-xml', 'web-tree-sitter',
   ]);
   const source = readFileSync(path.join(root, 'src/extension.ts'), 'utf8');
   assert.doesNotMatch(source, /child_process|registerCommand|createWebviewPanel|ansi-to-html/);
