@@ -2,7 +2,7 @@
   "name": "pfeifer-hurl",
   "displayName": "Hurl",
   "description": "Tree-sitter highlighting and structural editing for Hurl files",
-  "version": "1.4.2",
+  "version": "2.0.0",
   "license": "Apache-2.0",
   "author": "Jacob Pfeifer",
   "publisher": "JacobPfeifer",
@@ -12,7 +12,7 @@
   },
   "icon": "hurl-icon.png",
   "engines": {
-    "vscode": "^1.142.0"
+    "vscode": "^1.96.0"
   },
   "categories": [
     "programming languages"
@@ -148,7 +148,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
-    "@types/vscode": "^1.140.0",
+    "@types/vscode": "1.96.0",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^4.0.0",
     "eslint": "^10.13.0",

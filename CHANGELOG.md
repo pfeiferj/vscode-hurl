@@ -2,41 +2,15 @@
 
 All notable changes to the "hurl" extension will be documented in this file.
 
-## [Unreleased]
+## [2.0.0]
 
-- Add syntax-tree folding, conservative JSON/XML indentation, and context-aware
-  XML/Hurl line commenting with an editor-only command and scoped keybinding.
-- Add URL/path semantic styling and safe literal HTTP(S) request links.
-- Defer syntax squiggles while the bundled grammar's multiline JSON false
-  positives remain unresolved; do not publish parser recovery as diagnostics.
-- Share bounded worker analysis across highlighting and editor providers, with
-  independent consumer cancellation and packaged editor-feature regressions.
-- Preserve punctuation and interpolation captures; add Hurl-specific semantic
-  types and TextMate fallback scopes for methods, escapes, booleans, and options.
-- Complete native XML declaration/DTD and encoded-body highlighting; classify
-  capture names as variable declarations.
-- Highlight JSON, XML, and GraphQL fences while preserving Hurl templates and
-  leaving raw/unknown fences literal.
-- Reuse the bundled Hurl JSON grammar and native query in tagged JSON blocks,
-  parsing templates intact and removing the separate JSON grammar dependency.
-- Move parsing/query work into a worker thread, cache unchanged documents, and
-  discard cancelled or superseded requests.
-- Enable semantic highlighting by default for Hurl, preserving explicit user
-  overrides, and test actual visible-editor requests under a disabled theme.
-
-- Update the bundled Hurl grammar to upstream main at `3343774` (ABI 15), with
-  pinned build provenance and modern Hurl/JSON/XML highlighting regressions.
-
-- Remove the Hurl command runner, output webview, and execution-only dependencies;
-  retain syntax highlighting and the existing language configuration.
-- Update direct dependencies and tooling to current stable releases; require VS
-  Code 1.142.0 or newer.
-- Await Tree-sitter initialization before registering the semantic token provider,
-  support all Hurl document schemes, and dispose WASM resources correctly.
-- Emit a unique semantic token legend and non-overlapping UTF-16 ranges,
-  including CRLF, nested escapes, variables, and multiline strings.
-- Add real WASM/query regressions, extension-host tests, a reproducible lockfile,
-  and verification of the runtime and grammar assets in the packaged VSIX.
+* Remove the Hurl command runner and output panel. This extension now provides editor support only.
+* Latest tree-sitter-hurl with improved syntax highlighting, enabled by default.
+* Add highlighting for JSON, XML, and GraphQL in language-tagged blocks.
+* Add code folding, JSON/XML indentation, and context-aware Hurl/XML comments.
+* Add clickable HTTP(S) request URLs.
+* Improve highlighting performance and support untitled files.
+* Require VS Code 1.96.0 or newer.
 
 ## [1.4.2]
 * Latest tree-sitter-hurl with missing options
