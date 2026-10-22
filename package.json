@@ -1,7 +1,7 @@
 {
   "name": "pfeifer-hurl",
   "displayName": "Hurl",
-  "description": "Tree-sitter syntax highlighting and language configuration for Hurl files",
+  "description": "Tree-sitter highlighting and structural editing for Hurl files",
   "version": "1.4.2",
   "license": "Apache-2.0",
   "author": "Jacob Pfeifer",
@@ -24,9 +24,26 @@
   "contributes": {
     "configurationDefaults": {
       "[hurl]": {
-        "editor.semanticHighlighting.enabled": true
+        "editor.semanticHighlighting.enabled": true,
+        "editor.formatOnType": true
       }
     },
+    "commands": [
+      {
+        "command": "hurl.toggleComment",
+        "title": "Hurl: Toggle Context-Aware Line Comment",
+        "enablement": "editorLangId == hurl && !editorReadonly"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "hurl.toggleComment",
+        "key": "ctrl+/",
+        "mac": "cmd+/",
+        "when": "editorTextFocus && editorLangId == hurl && !editorReadonly"
+      }
+    ],
+
     "languages": [
       {
         "id": "hurl",
@@ -58,6 +75,16 @@
         "description": "Hurl option name or verbosity level"
       },
       {
+        "id": "hurlUrl",
+        "superType": "string",
+        "description": "Hurl HTTP request URL"
+      },
+      {
+        "id": "hurlPath",
+        "superType": "string",
+        "description": "Hurl filename or file literal"
+      },
+      {
         "id": "punctuationBracket",
         "description": "Hurl, JSON or XML structural bracket"
       },
@@ -85,6 +112,12 @@
           ],
           "hurlOption": [
             "support.constant.option.hurl"
+          ],
+          "hurlUrl": [
+            "markup.underline.link.hurl"
+          ],
+          "hurlPath": [
+            "string.other.link.filename.hurl"
           ],
           "punctuationBracket": [
             "punctuation.section.brackets.hurl"

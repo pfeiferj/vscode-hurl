@@ -2,6 +2,9 @@ import { Language, Parser, Query } from 'web-tree-sitter';
 
 import { highlights } from './query';
 import { EmbeddedHighlighter } from './embedded';
+import { analyzeTree, DocumentStructure, emptyStructure } from './analysis';
+
+export interface DocumentAnalysis extends DocumentStructure { tokens: HighlightToken[] }
 
 import { captureTypes, tokenModifiers, tokenTypes } from './tokens';
 export { tokenTypes } from './tokens';
@@ -56,30 +59,41 @@ export class Highlighter {
   }
 
   tokenize(text: string, additionalSpans: readonly CaptureSpan[] = [], shouldCancel: () => boolean = () => false): HighlightToken[] {
+    return this.compute(text, additionalSpans, shouldCancel, false).tokens;
+  }
+
+  analyze(text: string, additionalSpans: readonly CaptureSpan[] = [], shouldCancel: () => boolean = () => false): DocumentAnalysis {
+    return this.compute(text, additionalSpans, shouldCancel, true);
+  }
+
+  private compute(text: string, additionalSpans: readonly CaptureSpan[], shouldCancel: () => boolean,
+    includeStructure: boolean): DocumentAnalysis {
+    const result: DocumentAnalysis = { ...emptyStructure(), tokens: [] };
     if (this.disposed) {
       throw new Error('Highlighter has been disposed');
     }
     // VS Code treats standalone CR as a line ending; keep UTF-16 offsets unchanged.
     if (shouldCancel()) {
-      return [];
+      return result;
     }
     const source = text.replace(/\r(?!\n)/g, '\n');
     const tree = this.parser.parse(source, null, { progressCallback: shouldCancel });
     if (!tree) {
       // A cancelled parse otherwise resumes on the next (possibly unrelated) input.
       this.parser.reset();
-      return [];
+      return result;
     }
     try {
+      if (includeStructure) { Object.assign(result, analyzeTree(tree.rootNode, source, shouldCancel)); }
       // Embedded providers can append absolute spans without owning normalization or line splitting.
       const captures: CaptureSpan[] = [];
       const matches = this.query.captures(tree.rootNode, { progressCallback: shouldCancel });
       if (shouldCancel()) {
-        return [];
+        return result;
       }
       for (const { name, node } of matches) {
         if (shouldCancel()) {
-          return [];
+          return result;
         }
         captures.push({ start: node.startIndex, end: node.endIndex, capture: name });
         // The native Hurl grammar exposes XML values as opaque leaves, not entity nodes.
@@ -91,8 +105,8 @@ export class Highlighter {
         }
       }
       for (const fence of tree.rootNode.descendantsOfType('multiline_string')) {
-        if (shouldCancel()) { return []; }
-        for (const span of this.embedded.spans(source, fence, shouldCancel)) {
+        if (shouldCancel()) { return result; }
+        for (const span of this.embedded.spans(source, fence, shouldCancel, includeStructure ? result : undefined)) {
           captures.push(span);
         }
       }
@@ -102,7 +116,7 @@ export class Highlighter {
       const spans: Span[] = [];
       for (const [order, capture] of captures.entries()) {
         if ((order & 1023) === 0 && shouldCancel()) {
-          return [];
+          return result;
         }
         if (!Object.hasOwn(captureTypes, capture.capture)) {
           throw new Error(`Unknown highlight capture: ${capture.capture}`);
@@ -114,7 +128,8 @@ export class Highlighter {
         }
       }
       const normalized = normalize(spans, shouldCancel);
-      return shouldCancel() ? [] : splitLines(text, normalized, shouldCancel);
+      result.tokens = shouldCancel() ? [] : splitLines(text, normalized, shouldCancel);
+      return result;
     } finally {
       tree.delete();
     }

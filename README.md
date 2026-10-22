@@ -1,13 +1,13 @@
 # Hurl
 
-Tree-sitter-based syntax highlighting for [Hurl](https://hurl.dev) files in VS Code.
+Tree-sitter-based highlighting and editing support for [Hurl](https://hurl.dev) files in VS Code.
 This is an unofficial extension; see the Hurl website for the project itself.
 
 ## Features
 
 - Semantic syntax highlighting for `.hurl` files, including requests, assertions,
   strings, escapes, variables, comments, and multiline bodies.
-- Distinct interpolation/punctuation, HTTP method, boolean, escape, and option
+- Distinct interpolation/punctuation, HTTP method, boolean, escape, option, URL, and path
   token types with Hurl-specific TextMate fallback scopes for theme compatibility.
 - Native XML declarations, DTDs, tags and attributes, complete encoded literals,
   and variable declarations in capture sections.
@@ -19,9 +19,14 @@ This is an unofficial extension; see the Hurl website for the project itself.
   superseded requests, keeping parsing off the shared extension-host thread.
 - Hurl language configuration for comments, brackets, and automatic closing pairs.
 - Highlighting for local files, untitled documents, and other document URI schemes.
+- Structural folding for requests, responses, sections, bodies, and JSON/XML containers.
+- Conservative JSON/XML indentation through Format Document, Format Selection,
+  and on-type formatting, including tagged JSON/XML bodies.
+- Context-aware line commenting: `#` for Hurl and `<!-- ... -->` for XML.
+- Literal HTTP(S) request links, without executing or fetching requests.
 
-The extension only provides highlighting and language configuration. It does not
-register a Hurl command, execute requests, start processes, or open output webviews.
+The extension provides editor features only. Its comment-toggle command edits text;
+it never executes Hurl requests, starts processes, or opens output webviews.
 No Hurl executable or other external runtime is required: both the Tree-sitter
 runtime and the Hurl grammar are included as WebAssembly assets.
 
@@ -32,6 +37,40 @@ including with themes that do not opt into it. Explicit user settings still win:
 `[hurl].editor.semanticHighlighting.enabled: false` disables it, and
 `"configuredByTheme"` restores theme-controlled behavior. There is no TextMate
 grammar fallback when semantic highlighting is explicitly disabled.
+
+## Editing support
+
+Folding uses syntax-tree boundaries rather than indentation alone. Keep
+`editor.foldingStrategy` set to `auto` to use the Hurl provider.
+
+Format Document and Format Selection adjust **leading indentation only** inside
+parsed JSON/XML containers; they do not pretty-print or reflow values. Tabs,
+spaces, and outer indentation follow the formatting options. String/template
+contents, literal XML text lines, CDATA, and comment continuations are protected.
+Raw, untagged, unknown-language, and GraphQL fence payloads are left unchanged.
+Regions that the parser cannot confidently identify may receive no indentation
+edits. On-type formatting is enabled by a Hurl-specific default; set
+`[hurl].editor.formatOnType` to `false` to disable it.
+
+Use **Hurl: Toggle Context-Aware Line Comment** (`Ctrl+/`, or `Cmd+/` on macOS)
+to toggle comments according to the selected lines' syntax. The keybinding is
+limited to editable Hurl editors. Mixed Hurl/XML selections use the appropriate
+delimiter per line. Unsafe XML selections—such as CDATA, partial multiline tags,
+nested comments, or content containing `--`—are left unchanged rather than
+producing invalid comments.
+
+Request links are restricted to literal HTTP(S) URLs. Templates, Hurl escape
+sequences, invalid URLs, and other URI schemes do not become links. No URLs are
+fetched during analysis; navigation occurs only when you follow a link.
+
+**Syntax squiggles are deferred.** The bundled grammar has known false positives
+for some valid multiline JSON number/array layouts. The extension does not
+register a diagnostic collection or a syntax-diagnostics setting. That parser
+limitation can also make structural indentation incomplete or conservative in
+affected layouts; it has not been hidden by changing the grammar or payload text.
+The extension is not a Hurl validator and does not validate runtime behavior or
+matching XML tag names. No completion, request execution, or language-server
+process is introduced.
 
 ## Development
 
@@ -60,6 +99,9 @@ and do not change your normal VS Code settings. Set `HURL_VSCODE_VERSION=1.142.0
 to test the minimum supported release instead of current stable. Custom URI
 coverage is not a test of a genuine remote extension host; automatic requests are
 not a screenshot-based assertion of theme colors.
+Editor integration also checks folding, request links, document/selection/on-type
+indentation, tagged bodies, XML/Hurl comment roundtrips, and the absence of deferred
+syntax squiggles on malformed input and known grammar false positives.
 
 The runtime uses the current `web-tree-sitter` named `Parser`, `Language`, and
 `Query` APIs, explicitly locating the packaged runtime WASM. The bundled Hurl
@@ -67,7 +109,9 @@ parser has ABI 15, supported by runtime 0.27.1 (ABI 13–15); tests verify its d
 load the real parser, and compile the real highlighting query. Trees are deleted after every
 request. The worker is terminated with the extension; closing or editing a document
 invalidates its cache and pending requests. Results are cached for at most eight
-documents with a bounded estimated source/token footprint. Cancellation promptly
+documents with a bounded estimated source/token/structure footprint. Concurrent
+providers share same-version analysis; cancelling one consumer does not cancel
+other subscribers. Cancellation promptly
 discards stale results, skips queued obsolete jobs, and cooperatively interrupts
 active native/embedded parsing and queries. Unexpected worker failures reject
 outstanding requests; later requests can restart it with bounded backoff (at most

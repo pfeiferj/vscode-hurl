@@ -22,6 +22,7 @@ test('all custom semantic types are contributed with Hurl-specific TextMate fall
   }
 });
 
-test('semantic highlighting is enabled only as an overridable Hurl language default', () => {
-  assert.deepEqual(manifest.contributes.configurationDefaults, { '[hurl]': { 'editor.semanticHighlighting.enabled': true } });
+test('highlighting and on-type indentation are overridable Hurl language defaults', () => {
+  assert.deepEqual(manifest.contributes.configurationDefaults,
+    { '[hurl]': { 'editor.semanticHighlighting.enabled': true, 'editor.formatOnType': true } });
 });

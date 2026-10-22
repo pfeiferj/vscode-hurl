@@ -15,20 +15,24 @@ export const highlights = `
   (json_string)
   (multiline_string)
   (oneline_string)
-  (filename)
-  (filename_password)
   (xml_attribute_value)
   (xml_cdata)
   (xml_value_string)
 ] @string
 
+; Only the request target is a URL, not header or option value strings.
+(request (value_string) @string.url)
 
 [
-  (file_value)
   (oneline_hex)
   (oneline_base64)
-  (oneline_file)
 ] @string.special
+[
+  (filename)
+  (filename_password)
+  (file_value)
+  (oneline_file)
+] @string.path
 (regex) @string.regex
 
 [
@@ -111,7 +115,7 @@ export const highlights = `
 "}}" @punctuation.special
 
 "base64," @string.special
-"file," @string.special
+"file," @string.path
 "hex," @string.special
 
 `;

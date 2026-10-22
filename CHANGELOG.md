@@ -4,6 +4,13 @@ All notable changes to the "hurl" extension will be documented in this file.
 
 ## [Unreleased]
 
+- Add syntax-tree folding, conservative JSON/XML indentation, and context-aware
+  XML/Hurl line commenting with an editor-only command and scoped keybinding.
+- Add URL/path semantic styling and safe literal HTTP(S) request links.
+- Defer syntax squiggles while the bundled grammar's multiline JSON false
+  positives remain unresolved; do not publish parser recovery as diagnostics.
+- Share bounded worker analysis across highlighting and editor providers, with
+  independent consumer cancellation and packaged editor-feature regressions.
 - Preserve punctuation and interpolation captures; add Hurl-specific semantic
   types and TextMate fallback scopes for methods, escapes, booleans, and options.
 - Complete native XML declaration/DTD and encoded-body highlighting; classify

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { Language, Node, Parser, Query } from 'web-tree-sitter';
 
 import { highlights } from './query';
+import { analyzeTree, DocumentStructure } from './analysis';
 
 export interface EmbeddedSpan {
   start: number;
@@ -45,7 +46,8 @@ export class EmbeddedHighlighter {
     }
   }
 
-  spans(text: string, fenceNode: Node, shouldCancel: () => boolean = () => false): EmbeddedSpan[] {
+  spans(text: string, fenceNode: Node, shouldCancel: () => boolean = () => false,
+    structure?: DocumentStructure): EmbeddedSpan[] {
     if (this.grammars.size === 0) { throw new Error('EmbeddedHighlighter has been disposed'); }
     if (shouldCancel()) { return []; }
     const hint = fenceNode.namedChildren.find(node => node.type === 'multiline_string_type')?.text;
@@ -56,7 +58,11 @@ export class EmbeddedHighlighter {
     const start = newline.endIndex;
     const end = fenceNode.children.find(node => node.type === '```' && node.startIndex >= start)?.startIndex
       ?? fenceNode.endIndex;
-    if (hint === 'json') { return this.jsonSpans(text, start, end, grammar, shouldCancel); }
+    if (hint === 'json') {
+      const rootTemplate = fenceNode.namedChildren.some(node => node.type === 'template' && !node.hasError &&
+        !text.slice(start, node.startIndex).trim() && !text.slice(node.endIndex, end).trim());
+      return this.jsonSpans(text, start, end, grammar, shouldCancel, structure, rootTemplate);
+    }
     const templates = fenceNode.descendantsOfType('template')
       .map(node => ({ start: node.startIndex, end: node.endIndex }));
     let source = '';
@@ -76,6 +82,13 @@ export class EmbeddedHighlighter {
       return [];
     }
     try {
+      if (structure && hint === 'xml') {
+        const embedded = analyzeTree(tree.rootNode, source, shouldCancel);
+        // Masked external languages are useful for structure, not reliable diagnostics.
+        embedded.issues = [];
+        embedded.xmlRegions = [{ start: 0, end: source.length }];
+        appendStructure(structure, embedded, start, 0, source.length);
+      }
       const aliases: Readonly<Record<string, string>> = {
         'constant.builtin': hint === 'xml' ? 'string.escape' : 'keyword',
         'keyword.directive': 'keyword', 'keyword.directive.define': 'keyword', 'keyword.modifier': 'keyword',
@@ -117,18 +130,24 @@ export class EmbeddedHighlighter {
 
   /** Parse the untouched body as a native Hurl JSON value, including Hurl templates. */
   private jsonSpans(text: string, start: number, end: number, grammar: Grammar,
-    shouldCancel: () => boolean): EmbeddedSpan[] {
+    shouldCancel: () => boolean, structure?: DocumentStructure, rootTemplate = false): EmbeddedSpan[] {
     // The Hurl parser starts at hurl_file, not json_value. A synthetic request
     // supplies the normal body context without rewriting the JSON or templates.
     // Only captures entirely inside the original body escape.
-    const prefix = 'POST https://hurl.invalid\n';
-    const source = prefix + text.slice(start, end) + '\n';
+    // A whole-value template needs a JSON value context, not the ambiguous
+    // request-header position. Its original text is still preserved verbatim.
+    const prefix = 'POST https://hurl.invalid\n' + (rootTemplate ? '{"__hurl_value__":' : '');
+    const source = prefix + text.slice(start, end) + (rootTemplate ? '\n}\n' : '\n');
     const tree = grammar.parser.parse(source, null, { progressCallback: shouldCancel });
     if (!tree) {
       grammar.parser.reset();
       return [];
     }
     try {
+      if (structure) {
+        appendStructure(structure, analyzeTree(tree.rootNode, source, shouldCancel),
+          start - prefix.length, prefix.length, prefix.length + end - start);
+      }
       const result: EmbeddedSpan[] = [];
       for (const { name, node } of grammar.query.captures(tree.rootNode, { progressCallback: shouldCancel })) {
         if (shouldCancel()) { return []; }
@@ -147,5 +166,26 @@ export class EmbeddedHighlighter {
       parser.delete();
     }
     this.grammars.clear();
+  }
+}
+
+/** Map a separately parsed body back without exposing wrapper nodes or URLs. */
+function appendStructure(target: DocumentStructure, source: DocumentStructure,
+  offset: number, lower: number, upper: number): void {
+  const inside = (range: { start: number; end: number }) => range.start >= lower && range.end <= upper;
+  const mapped = <T extends { start: number; end: number }>(range: T): T =>
+    ({ ...range, start: range.start + offset, end: range.end + offset });
+  for (const range of source.folds) { if (inside(range)) { target.folds.push(mapped(range)); } }
+  for (const range of source.xmlRegions) { if (inside(range)) { target.xmlRegions.push(mapped(range)); } }
+  for (const range of source.protectedRanges) { if (inside(range)) { target.protectedRanges.push(mapped(range)); } }
+  for (const range of source.containers) {
+    if (inside(range)) { target.containers.push({ ...mapped(range), close: range.close + offset }); }
+  }
+  for (const issue of source.issues) {
+    // Missing tokens can fall on the one synthetic newline following the body.
+    if (target.issues.length < 100 && issue.start >= lower && issue.start <= upper + 1) {
+      target.issues.push({ ...issue, start: Math.min(issue.start, upper) + offset,
+        end: Math.min(issue.end, upper) + offset });
+    }
   }
 }

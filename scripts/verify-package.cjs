@@ -9,7 +9,7 @@ async function main() {
   const archive = path.resolve('hurl.vsix');
   const listing = execFileSync('unzip', ['-Z1', archive], { encoding: 'utf8' }).split('\n');
   for (const file of ['out/extension.js', 'out/highlighting.js', 'out/query.js', 'out/tokens.js',
-    'out/embedded.js', 'out/worker-highlighter.js', 'out/highlighting-worker.js',
+    'out/embedded.js', 'out/analysis.js', 'out/editing.js', 'out/worker-highlighter.js', 'out/highlighting-worker.js',
     'tree-sitter-hurl.wasm', 'tree-sitter-hurl.json', 'language-configuration.json',
     'node_modules/web-tree-sitter/web-tree-sitter.cjs',
     'node_modules/web-tree-sitter/web-tree-sitter.wasm']) {
@@ -62,8 +62,12 @@ async function main() {
       'POST https://example.org\n```xml\n<root attr="x"/>\n```\n' +
       'POST https://example.org\n```graphql\nquery Demo { user { name } }\n```\n';
     const lines = source.split('\n');
-    const tokens = await worker.tokenize('packaged-fences', 1, source);
-    assert.ok(tokens);
+    const analysis = await worker.analyze('packaged-fences', 1, source);
+    assert.ok(analysis);
+    assert.deepEqual(analysis.issues, []);
+    assert.ok(analysis.folds.length > 0 && analysis.xmlRegions.length > 0);
+    assert.equal(analysis.links.length, 3);
+    const tokens = analysis.tokens;
     const decoded = tokens.map(token => ({
       text: lines[token.line].slice(token.start, token.start + token.length), type: tokenTypes[token.type],
     }));
@@ -72,11 +76,23 @@ async function main() {
       ['root', 'type'], ['query', 'keyword']]) {
       assert.ok(decoded.some(token => token.text === text && token.type === type), `Packaged fence ${text}: ${type}`);
     }
+    assert.ok(decoded.some(token => token.type === 'hurlUrl'));
+    const invalid = await worker.analyze('packaged-invalid', 1, 'POST https://example.org\n{"broken": }\n');
+    assert.ok(invalid && invalid.issues.length > 0);
+    const { indentationEdits, commentEdits } = require(path.join(root, 'out/editing.js'));
+    const editable = 'POST https://example.org\n<root>\n        <child/>\n</root>\n';
+    const structure = await worker.analyze('packaged-editing', 1, editable);
+    assert.ok(structure);
+    assert.ok(indentationEdits(editable, structure, { tabSize: 2, insertSpaces: true }).length > 0);
+    const start = editable.indexOf('<child/>');
+    assert.ok(commentEdits(editable, structure, [{ start, end: start }], true).some(edit => edit.text.includes('<!--')));
   } finally {
     worker.dispose();
   }
   const manifest = require(path.join(root, 'package.json'));
-  assert.equal(manifest.contributes.commands, undefined);
+  assert.deepEqual(manifest.contributes.commands.map(command => command.command), ['hurl.toggleComment']);
+  assert.equal(manifest.contributes.configuration?.properties?.['hurl.syntaxDiagnostics.enabled'], undefined);
+  assert.doesNotMatch(fs.readFileSync(path.join(root, 'out/extension.js'), 'utf8'), /createDiagnosticCollection|syntaxDiagnostics/);
   console.log(`Packaged WASM/query smoke passed: ${root}`);
   console.log(`Extension-host smoke: HURL_EXTENSION_PATH="${root}" npm run test:integration`);
 }

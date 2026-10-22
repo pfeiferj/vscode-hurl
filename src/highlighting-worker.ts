@@ -16,9 +16,9 @@ async function main(): Promise<void> {
       return;
     }
     try {
-      const tokens = highlighter.tokenize(text, [], () => Atomics.load(cancel, 0) !== 0);
+      const result = highlighter.analyze(text, [], () => Atomics.load(cancel, 0) !== 0);
       if (!Atomics.load(cancel, 0)) {
-        port.postMessage({ id, tokens } satisfies HighlightResponse);
+        port.postMessage({ id, result } satisfies HighlightResponse);
       }
     } catch (error) {
       port.postMessage({ id, error: String(error) } satisfies HighlightResponse);

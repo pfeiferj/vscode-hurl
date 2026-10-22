@@ -2,6 +2,7 @@ import * as assert from 'node:assert/strict';
 import * as vscode from 'vscode';
 
 import { checkThemeDelivery } from './theme-integration';
+import { checkEditorFeatures } from './editor-integration';
 
 async function checkDocument(document: vscode.TextDocument,
   expected: ReadonlyArray<readonly [string, string, string?]> = []): Promise<void> {
@@ -39,6 +40,7 @@ export async function run(): Promise<void> {
   assert.ok(extension);
   await extension.activate();
   await checkThemeDelivery(extension);
+  await checkEditorFeatures();
   const text = 'POST https://example.com/{{newUuid}}\r\n[Options]\r\nretry: -1\r\n' +
     'retry-interval: 2ms\r\nverbosity: debug\r\n' +
     '{ "emoji": "😀\\n{{name}}", "ok": true }\r\nHTTP 200\r\n[Asserts]\r\n' +

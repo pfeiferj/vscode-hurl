@@ -40,7 +40,7 @@ test('custom token metadata supplies intentional TextMate theme fallbacks', () =
   assert.ok(Array.isArray(definitions), 'semanticTokenTypes');
   assert.ok(Array.isArray(scopes), 'semanticTokenScopes');
   assert.deepEqual(definitions.map(({ id }) => id).sort(), [
-    'hurlBoolean', 'hurlEscape', 'hurlMethod', 'hurlOption',
+    'hurlBoolean', 'hurlEscape', 'hurlMethod', 'hurlOption', 'hurlPath', 'hurlUrl',
     'punctuationBracket', 'punctuationDelimiter', 'punctuationSpecial',
   ]);
   assert.deepEqual(tokenMetadata.tokenModifiers, ['declaration']);
@@ -48,6 +48,7 @@ test('custom token metadata supplies intentional TextMate theme fallbacks', () =
   for (const [id, scope] of Object.entries({
     hurlMethod: 'keyword.control.http-method.hurl', hurlEscape: 'constant.character.escape.hurl',
     hurlBoolean: 'constant.language.boolean.hurl', hurlOption: 'support.constant.option.hurl',
+    hurlUrl: 'markup.underline.link.hurl', hurlPath: 'string.other.link.filename.hurl',
     punctuationBracket: 'punctuation.section.brackets.hurl',
     punctuationDelimiter: 'punctuation.separator.hurl', punctuationSpecial: 'punctuation.section.interpolation.hurl',
     'variable.declaration': 'variable.other.readwrite.hurl',
@@ -55,6 +56,58 @@ test('custom token metadata supplies intentional TextMate theme fallbacks', () =
     assert.ok(fallbacks?.[id]?.includes(scope), `${id}: ${scope}`);
   }
   assert.ok(definitions.every(({ id, description }) => tokenTypes.includes(id) && description.length > 0));
+  for (const id of ['hurlUrl', 'hurlPath']) {
+    assert.equal(definitions.find(definition => definition.id === id)?.superType, 'string', id);
+  }
+});
+
+test('only request URLs have link styling while templates and escapes remain specific', () => {
+  const result = tokens('GET https://example.org/😀/{{host}}/a\\#b\n' +
+    'Location: https://example.org/header\n[Options]\nproxy: https://example.org/proxy\n');
+  assert.deepEqual(result.filter(token => token.line === 0).map(({ text, type }) => ({ text, type })), [
+    { text: 'GET', type: 'hurlMethod' },
+    { text: ' https://example.org/😀/', type: 'hurlUrl' },
+    { text: '{{', type: 'punctuationSpecial' },
+    { text: 'host', type: 'variable' },
+    { text: '}}', type: 'punctuationSpecial' },
+    { text: '/a', type: 'hurlUrl' },
+    { text: '\\#', type: 'hurlEscape' },
+    { text: 'b', type: 'hurlUrl' },
+  ]);
+  assert.ok(result.some(token => token.text === ' https://example.org/header' && token.type === 'string'));
+  assert.ok(result.some(token => token.text === ' https://example.org/proxy' && token.type === 'string'));
+  assert.ok(result.filter(token => token.type === 'hurlUrl').every(token => token.line === 0));
+});
+
+test('filenames and file literals have path styling with narrower templates and escapes', () => {
+  const source = 'POST https://example.org\n[Options]\ncert: {{cert}}\\ name.pem\n' +
+    'file,fixtures/😀{{name}}\\ body.bin;\nHTTP 200\n[Asserts]\nbody == file,fixtures/body.bin;\n';
+  const result = tokens(source);
+  assert.deepEqual(result.filter(token => token.line === 2).map(({ text, type }) => ({ text, type })), [
+    { text: 'cert', type: 'hurlOption' }, { text: ':', type: 'punctuationDelimiter' },
+    { text: '{{', type: 'punctuationSpecial' }, { text: 'cert', type: 'variable' },
+    { text: '}}', type: 'punctuationSpecial' }, { text: '\\ ', type: 'hurlEscape' },
+    { text: 'name.pem', type: 'hurlPath' },
+  ]);
+  assert.deepEqual(result.filter(token => token.line === 3).map(({ text, type }) => ({ text, type })), [
+    { text: 'file,fixtures/😀', type: 'hurlPath' },
+    { text: '{{', type: 'punctuationSpecial' }, { text: 'name', type: 'variable' },
+    { text: '}}', type: 'punctuationSpecial' }, { text: '\\ ', type: 'hurlEscape' },
+    { text: 'body.bin;', type: 'hurlPath' },
+  ]);
+  assert.ok(result.some(token => token.text === 'file,fixtures/body.bin;' && token.type === 'hurlPath'));
+  // The full file literal (prefix and terminator included) must stay highlighted.
+  assert.equal(result.filter(token => token.line === 3).map(token => token.text).join(''), source.split('\n')[3]);
+});
+
+test('regex aliases keep regexp styling and narrower escapes beside URL and path tokens', () => {
+  const result = tokens('GET https://example.org/{{id}}\nHTTP 200\n[Asserts]\nbody matches /a\\/b/\n');
+  assert.deepEqual(result.filter(token => token.line === 3).map(({ text, type }) => ({ text, type })), [
+    { text: 'body', type: 'function' }, { text: 'matches', type: 'operator' },
+    { text: '/a', type: 'regexp' }, { text: '\\/', type: 'hurlEscape' },
+    { text: 'b/', type: 'regexp' },
+  ]);
+  assert.ok(result.some(token => token.type === 'hurlUrl'));
 });
 
 test('native XML entity references override text and attributes but not CDATA or comments', () => {
@@ -127,11 +180,12 @@ test('binary and file literals capture payloads and terminators, not only prefix
   for (const literal of ['hex,CA FE01;', 'base64,SGVsbG8=;', 'file,fixtures/body.bin;']) {
     const result = tokens(`POST https://example.org\n${literal}\n`).filter(token => token.line === 1);
     assert.deepEqual(result.map(token => token.text).join(''), literal);
-    assert.ok(result.every(token => token.type === 'string'));
+    assert.ok(result.every(token => token.type === (literal.startsWith('file,') ? 'hurlPath' : 'string')));
   }
   const assertions = tokens('GET https://example.org\nHTTP 200\n[Asserts]\nbody == hex,CAFE;\nbody == base64,QQ==;\nbody == file,body.bin;\n');
   for (const literal of ['hex,CAFE;', 'base64,QQ==;', 'file,body.bin;']) {
-    assert.ok(assertions.some(token => token.text === literal && token.type === 'string'), literal);
+    assert.ok(assertions.some(token => token.text === literal &&
+      token.type === (literal.startsWith('file,') ? 'hurlPath' : 'string')), literal);
   }
 });
 
@@ -157,7 +211,7 @@ test('bundled grammar ABI is supported by the current runtime', async () => {
 
 test('distinct Hurl classifications have a unique legend', () => {
   assert.equal(new Set(tokenTypes).size, tokenTypes.length);
-  for (const type of ['hurlMethod', 'hurlEscape', 'hurlBoolean', 'hurlOption']) {
+  for (const type of ['hurlMethod', 'hurlEscape', 'hurlBoolean', 'hurlOption', 'hurlUrl', 'hurlPath']) {
     assert.ok(tokenTypes.includes(type), type);
   }
   const result = tokens('GET https://example.com/{{id}}\nHTTP 200\n[Asserts]\njsonpath "$.ok" == true\n');
@@ -241,15 +295,15 @@ test('initialization failures reject instead of silently providing no tokens', a
   await assert.rejects(Highlighter.create(path.join(root, 'does-not-exist.wasm')));
 });
 
-test('extension manifest and activation have no runner, commands or shell execution', () => {
+test('extension contributes only editor commands and has no runner or shell execution', () => {
   const manifest = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
-  assert.equal(manifest.contributes.commands, undefined);
+  assert.deepEqual(manifest.contributes.commands.map((command: { command: string }) => command.command), ['hurl.toggleComment']);
   assert.deepEqual(manifest.activationEvents, ['onLanguage:hurl']);
   assert.deepEqual(Object.keys(manifest.dependencies).sort(), [
     '@lumis-sh/wasm-graphql', '@lumis-sh/wasm-xml', 'web-tree-sitter',
   ]);
   const source = readFileSync(path.join(root, 'src/extension.ts'), 'utf8');
-  assert.doesNotMatch(source, /child_process|registerCommand|createWebviewPanel|ansi-to-html/);
+  assert.doesNotMatch(source, /child_process|createWebviewPanel|ansi-to-html|hurl\.hurl|execFile|spawn\(/);
   assert.equal(manifest.contributes.languages[0].configuration, './language-configuration.json');
 });
 
