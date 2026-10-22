@@ -2,6 +2,16 @@
 
 All notable changes to the "hurl" extension will be documented in this file.
 
+## [2.0.0]
+
+* Remove the Hurl command runner and output panel. This extension now provides editor support only.
+* Latest tree-sitter-hurl with improved syntax highlighting, enabled by default.
+* Add highlighting for JSON, XML, and GraphQL in language-tagged blocks.
+* Add code folding, JSON/XML indentation, and context-aware Hurl/XML comments.
+* Add clickable HTTP(S) request URLs.
+* Improve highlighting performance and support untitled files.
+* Require VS Code 1.96.0 or newer.
+
 ## [1.4.2]
 * Latest tree-sitter-hurl with missing options
 

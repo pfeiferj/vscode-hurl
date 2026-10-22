@@ -1,8 +1,8 @@
 {
   "name": "pfeifer-hurl",
   "displayName": "Hurl",
-  "description": "Provides syntax highlighting for hurl",
-  "version": "1.4.2",
+  "description": "Tree-sitter highlighting and structural editing for Hurl files",
+  "version": "2.0.0",
   "license": "Apache-2.0",
   "author": "Jacob Pfeifer",
   "publisher": "JacobPfeifer",
@@ -12,23 +12,38 @@
   },
   "icon": "hurl-icon.png",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.96.0"
   },
   "categories": [
     "programming languages"
   ],
   "activationEvents": [
-    "onCommand:hurl.hurl",
     "onLanguage:hurl"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "configurationDefaults": {
+      "[hurl]": {
+        "editor.semanticHighlighting.enabled": true,
+        "editor.formatOnType": true
+      }
+    },
     "commands": [
       {
-        "command": "hurl.hurl",
-        "title": "Hurl"
+        "command": "hurl.toggleComment",
+        "title": "Hurl: Toggle Context-Aware Line Comment",
+        "enablement": "editorLangId == hurl && !editorReadonly"
       }
     ],
+    "keybindings": [
+      {
+        "command": "hurl.toggleComment",
+        "key": "ctrl+/",
+        "mac": "cmd+/",
+        "when": "editorTextFocus && editorLangId == hurl && !editorReadonly"
+      }
+    ],
+
     "languages": [
       {
         "id": "hurl",
@@ -37,34 +52,114 @@
         ],
         "configuration": "./language-configuration.json"
       }
+    ],
+    "semanticTokenTypes": [
+      {
+        "id": "hurlMethod",
+        "superType": "method",
+        "description": "Hurl HTTP request method"
+      },
+      {
+        "id": "hurlEscape",
+        "superType": "string",
+        "description": "Hurl string escape or XML entity reference"
+      },
+      {
+        "id": "hurlBoolean",
+        "superType": "keyword",
+        "description": "Hurl or JSON boolean literal"
+      },
+      {
+        "id": "hurlOption",
+        "superType": "property",
+        "description": "Hurl option name or verbosity level"
+      },
+      {
+        "id": "hurlUrl",
+        "superType": "string",
+        "description": "Hurl HTTP request URL"
+      },
+      {
+        "id": "hurlPath",
+        "superType": "string",
+        "description": "Hurl filename or file literal"
+      },
+      {
+        "id": "punctuationBracket",
+        "description": "Hurl, JSON or XML structural bracket"
+      },
+      {
+        "id": "punctuationDelimiter",
+        "description": "Hurl, JSON or XML punctuation separator"
+      },
+      {
+        "id": "punctuationSpecial",
+        "description": "Hurl variable interpolation delimiter"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "hurl",
+        "scopes": {
+          "hurlMethod": [
+            "keyword.control.http-method.hurl"
+          ],
+          "hurlEscape": [
+            "constant.character.escape.hurl"
+          ],
+          "hurlBoolean": [
+            "constant.language.boolean.hurl"
+          ],
+          "hurlOption": [
+            "support.constant.option.hurl"
+          ],
+          "hurlUrl": [
+            "markup.underline.link.hurl"
+          ],
+          "hurlPath": [
+            "string.other.link.filename.hurl"
+          ],
+          "punctuationBracket": [
+            "punctuation.section.brackets.hurl"
+          ],
+          "punctuationDelimiter": [
+            "punctuation.separator.hurl"
+          ],
+          "punctuationSpecial": [
+            "punctuation.section.interpolation.hurl"
+          ],
+          "variable.declaration": [
+            "variable.other.readwrite.hurl"
+          ]
+        }
+      }
     ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "watch": "tsc --watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "lint": "eslint src",
+    "test": "node --test out/test/*.test.js",
+    "test:integration": "node out/test/runTest.js",
+    "package": "vsce package --out hurl.vsix",
+    "verify:package": "npm run package && node scripts/verify-package.cjs"
   },
   "devDependencies": {
-    "@types/glob": "^8.0.0",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "16.x",
-    "@types/vscode": "^1.74.0",
-    "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
-    "@vscode/test-electron": "^2.2.0",
-    "eslint": "^8.28.0",
-    "glob": "^8.0.3",
-    "mocha": "^10.1.0",
-    "typescript": "^4.9.3",
-    "vsce": "^2.15.0"
+    "@types/node": "^26.6.5",
+    "@types/vscode": "1.96.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.0.0",
+    "eslint": "^10.13.0",
+    "typescript": "^7.0.2",
+    "@babel/eslint-parser": "^8.0.7",
+    "@babel/plugin-syntax-typescript": "^8.0.3",
+    "@types/emscripten": "^1.41.6"
   },
   "dependencies": {
-    "@types/lodash-es": "^4.17.6",
-    "ansi-to-html": "^0.7.2",
-    "lodash": "^4.17.21",
-    "web-tree-sitter": "^0.20.8"
+    "@lumis-sh/wasm-graphql": "0.26.3",
+    "@lumis-sh/wasm-xml": "0.26.4",
+    "web-tree-sitter": "^0.27.1"
   }
 }

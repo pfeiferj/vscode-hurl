@@ -1,0 +1,36 @@
+{
+  "xml": {
+    "package": "@lumis-sh/wasm-xml",
+    "version": "0.26.4",
+    "abiVersion": 15,
+    "parser": {
+      "name": "tree-sitter-xml",
+      "grammarName": "xml",
+      "upstreamVersion": "0.7.0",
+      "revision": "87cc03f6576036feb5ff083be6e03ad7885e06cd",
+      "sha256": "0fae84abd4fe00e998e413b17ab1855fdef334e7a1f0cf4cdf2fb71aaed2de63",
+      "size": 52032
+    },
+    "upstreamRepository": "https://github.com/tree-sitter-grammars/tree-sitter-xml",
+    "upstreamLicenseUrl": "https://raw.githubusercontent.com/tree-sitter-grammars/tree-sitter-xml/87cc03f6576036feb5ff083be6e03ad7885e06cd/LICENSE",
+    "license": "MIT",
+    "queries": "Packaged lumis.json languages.<language>.highlights"
+  },
+  "graphql": {
+    "package": "@lumis-sh/wasm-graphql",
+    "version": "0.26.3",
+    "abiVersion": 15,
+    "parser": {
+      "name": "tree-sitter-graphql",
+      "grammarName": "graphql",
+      "upstreamVersion": "0.2.1",
+      "revision": "5e66e961eee421786bdda8495ed1db045e06b5fe",
+      "sha256": "3cb5b779f2b12b1e888b80aee6f671e275974ecb0fae12939e227058d0d51087",
+      "size": 64462
+    },
+    "upstreamRepository": "https://github.com/bkegley/tree-sitter-graphql",
+    "upstreamLicenseUrl": "https://raw.githubusercontent.com/bkegley/tree-sitter-graphql/5e66e961eee421786bdda8495ed1db045e06b5fe/LICENSE",
+    "license": "MIT",
+    "queries": "Packaged lumis.json languages.<language>.highlights"
+  }
+}
